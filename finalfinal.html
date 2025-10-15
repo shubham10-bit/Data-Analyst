@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Resume | Data Analyst</title>
+    <!-- Chosen Palette: Warm Neutrals & Muted Teal -->
+    <!-- Application Structure Plan: A tabbed SPA interface with sections for Overview, Skills, Projects, and Experience. The user starts on an Overview with a summary and a high-level skills chart. They can navigate to dedicated sections for deeper dives. The Projects section is the core interactive component, where clicking on a project reveals its details and a dynamic, interactive chart that visualizes the project's data concepts. This structure separates concerns, prevents information overload, and allows recruiters to quickly access the sections most relevant to them, with the interactive charts serving as a powerful proof of skill. -->
+    <!-- Visualization & Content Choices: 
+        1. Skills Overview -> Goal: Inform -> Viz: Horizontal Bar Chart -> Interaction: Hover for tooltips -> Justification: Provides a quick, visual summary of key competencies. -> Library: Chart.js.
+        2. Project Showcase -> Goal: Compare/Explore -> Viz: Multi-type Chart (Bar, Line, Doughnut) -> Interaction: User clicks buttons to change the dataset and chart type being displayed, simulating a mini-dashboard. -> Justification: Actively demonstrates the data visualization and analysis skills mentioned in the resume, making the experience more impactful than static text. -> Library: Chart.js.
+        3. Content Organization -> Goal: Organize -> Method: Tabbed navigation and expandable project cards. -> Interaction: Click to switch views and reveal project details. -> Justification: Creates a clean, user-friendly, and non-linear way to explore the resume content. -> Method: Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f7f4; 
+            color: #2d3748;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-link.active {
+            color: #0d9488; /* Teal color for active link */
+        }
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #0d9488;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .project-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-800">Shubham Aeer | Data Analyst Portfolio</h1>
+            <p class="text-slate-600 mt-2">An Interactive Showcase of Skills and Projects</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="flex justify-center items-center space-x-4 md:space-x-8 mb-8 border-b border-slate-200">
+            <a href="#overview" class="nav-link active font-semibold text-slate-700 py-2">Overview</a>
+            <a href="#skills" class="nav-link font-semibold text-slate-700 py-2">Skills</a>
+            <a href="#projects" class="nav-link font-semibold text-slate-700 py-2">Projects</a>
+            <a href="#experience" class="nav-link font-semibold text-slate-700 py-2">Experience & Education</a>
+        </nav>
+
+        <!-- Main Content Sections -->
+        <main id="main-content">
+
+            <!-- Overview Section -->
+            <section id="overview" class="content-section space-y-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <div class="flex flex-col md:flex-row items-center md:items-center space-y-4 md:space-y-0 md:space-x-6">
+                        <!-- Profile Picture Placeholder - Increased size to w-32 h-32 and updated placeholder image size -->
+                        <img 
+                            src="mypic.png"
+                            alt="Profile Portrait" 
+                            class="w-32 h-32 rounded-full object-cover border-4 border-teal-500 shadow-md flex-shrink-0"
+                        >
+                        <div>
+                            <h2 class="text-2xl font-bold text-slate-800 mb-2">Summary</h2>
+                            <p class="text-slate-600 leading-relaxed">
+                                This section provides a high-level introduction to my profile. It summarizes my educational background and hands-on experience in data analysis, highlighting the core technologies I use to turn data into actionable insights.
+                            </p>
+                            <p class="text-slate-600 leading-relaxed mt-4">
+                               BCA graduate currently developing strong Python and SQL skills for data analysis, cleaning, and visualization through academic projects and coursework. Proficient in leveraging libraries like NumPy and Pandas to extract actionable insights and create reports. Eager to secure an entry-level Data Analyst role to translate data into strategic business decisions and drive growth.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-4">Core Competency Overview</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        The chart below offers a quick visual summary of my self-assessed proficiency across the key areas of my technical skill set. It's designed to give you an at-a-glance understanding of my strengths in programming, database management, and data visualization.
+                    </p>
+                    <div class="chart-container">
+                        <canvas id="skillsChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Skills Section -->
+            <section id="skills" class="content-section hidden space-y-6">
+                 <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-4">Technical Skillset</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        Here you'll find a detailed breakdown of my technical capabilities. I've categorized them into Programming & Analysis, Databases, and Visualization to clearly outline the specific tools and technologies I'm proficient with.
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg mb-2 text-teal-700">Programming & Analysis</h3>
+                            <p class="text-slate-600">Python (Pandas, NumPy, Matplotlib, Seaborn), SQL, Excel, Git</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg mb-2 text-teal-700">Data Visualization</h3>
+                            <p class="text-slate-600">Matplotlib, Google Charts, Advanced Excel</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg mb-2 text-teal-700">Databases</h3>
+                            <p class="text-slate-600">MySQL</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg mb-2 text-teal-700">Operating Systems & Scripting</h3>
+                            <p class="text-slate-600">Linux (Ubuntu, Debian), Windows, Bash</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg mb-2 text-teal-700">Tools & Editors</h3>
+                            <p class="text-slate-600">Git, VS Code, Vim, Excel</p>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg mb-2 text-teal-700">Web Technologies (Contextual)</h3>
+                            <p class="text-slate-600">HTML, CSS, JavaScript, PHP</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Projects Section -->
+            <section id="projects" class="content-section hidden space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-4">Interactive Project Showcase</h2>
+                    <p class="text-slate-600 leading-relaxed mb-6">
+                        This is where theory meets practice. Below are descriptions of my key projects. Click on any project card to see a detailed breakdown and interact with a live chart that simulates the analysis and visualization tasks performed in that project. This allows you to see my skills in action.
+                    </p>
+                    <div id="project-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Project cards will be injected here by JS -->
+                    </div>
+                </div>
+                <div id="project-details" class="hidden bg-white p-6 rounded-lg shadow-sm">
+                    <button id="close-project" class="mb-4 font-semibold text-teal-600 hover:text-teal-800">&larr; Back to all projects</button>
+                    <h3 id="project-detail-title" class="text-2xl font-bold text-slate-800 mb-2"></h3>
+                    <div id="project-detail-description" class="text-slate-600 space-y-2 mb-6"></div>
+                    <div class="bg-slate-50 p-4 rounded-lg">
+                        <div class="flex flex-wrap justify-center gap-2 mb-4" id="chart-controls">
+                            <!-- Chart control buttons will be injected here -->
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="projectChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Experience & Education Section -->
+            <section id="experience" class="content-section hidden space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-2xl font-bold text-slate-800 mb-4">Relevant Experience</h2>
+                     <p class="text-slate-600 leading-relaxed mb-6">
+                        This section details my practical, hands-on experience from academic and personal projects. These points highlight my ability to automate data preparation tasks and manage development environments, ensuring data security and integrity.
+                    </p>
+                    <ul class="list-disc ml-5 text-slate-600 space-y-2">
+                        <li><b>Data Preparation and Reporting:</b> Automated the extraction and transformation of raw log data using Python scripts, preparing it for loading into an analysis database.</li>
+                        <li><b>System Environment Management:</b> Maintained development environments, managing user access and database permissions to ensure data security and compliance for project work.</li>
+                    </ul>
+                </div>
+
+                 <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">Education</h2>
+                        <p class="text-slate-600 leading-relaxed mb-6">
+                            My academic background in Computer Applications provided the foundational knowledge for my technical skills in programming, database management, and systems analysis.
+                        </p>
+                        <div class="space-y-3">
+                            <div>
+                                <p class="font-semibold">Bachelor Of Computer Application (BCA)</p>
+                                <p class="text-sm text-slate-500">Amrita Vishwa Vidyapeetham, Coimbatore | [2021-2025] | 8.47 CGPA</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold">Higher Secondary Certificate</p>
+                                <p class="text-sm text-slate-500">Mehernosh Jr. College | [2019-2021] | 72%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-lg shadow-sm">
+                        <h2 class="text-2xl font-bold text-slate-800 mb-4">Interests & Core Focus</h2>
+                        <p class="text-slate-600 leading-relaxed mb-6">
+                           A peek into my professional curiosity and continuous learning focus areas.
+                        </p>
+                        <p class="text-slate-700 font-medium leading-relaxed">
+                            Data Science • Statistical Modeling • Python Scripting & Automation • Cloud Computing Fundamentals • Cybersecurity Basics • Open Source Technologies
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const projectsData = [
+                {
+                    id: 1,
+                    title: "Business Analytics & Data Visualization",
+                    short: "An interactive dashboard project analyzing sales, customer, and inventory data.",
+                    description: [
+                        "Analyzed large-scale datasets using SQL queries to filter and aggregate key metrics.",
+                        "Utilized Python (Pandas/NumPy) and advanced Excel functions to clean, preprocess, and model raw data, ensuring data integrity for downstream analysis.",
+                        "Developed interactive dashboards using Google Charts to visualize customer segmentation, sales trends, and inventory forecasts.",
+                        "Generated detailed analytical reports highlighting forecasting model performance and providing data-backed customer insights for strategic planning."
+                    ],
+                    charts: [
+                        { label: 'Sales Trends', type: 'line', data: { labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'Revenue ($K)', data: [150, 180, 220, 190, 250, 280], backgroundColor: 'rgba(13, 148, 136, 0.2)', borderColor: 'rgba(13, 148, 136, 1)', borderWidth: 2, fill: true }] } },
+                        { label: 'Customer Segments', type: 'doughnut', data: { labels: ['New', 'Returning', 'VIP'], datasets: [{ label: 'Customer Distribution', data: [300, 850, 150], backgroundColor: ['#14b8a6', '#2dd4bf', '#5eead4'], hoverOffset: 4 }] } },
+                        { label: 'Inventory Forecast', type: 'bar', data: { labels: ['Product A', 'Product B', 'Product C', 'Product D'], datasets: [{ label: 'Units to Stock', data: [500, 350, 600, 420], backgroundColor: ['#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4'], borderColor: '#0f766e', borderWidth: 1 }] } }
+                    ]
+                },
+                {
+                    id: 2,
+                    title: "Data Correlation and Visualization with Python",
+                    short: "Performed EDA and created various plots to communicate findings on variable relationships.",
+                     description: [
+                        "Performed exploratory data analysis (EDA) on a public dataset to identify patterns and anomalies.",
+                        "Conducted correlation checks and statistical summaries using the NumPy and Pandas libraries.",
+                        "Created various data visualizations, including line, bar, and scatter plots using Matplotlib, to communicate findings on variable relationships.",
+                        "Practiced efficient data handling and performance optimization for analysis workflows."
+                    ],
+                    charts: [
+                        { label: 'Correlation Heatmap (Simulated)', type: 'bar', data: { labels: ['Feature A', 'Feature B', 'Feature C', 'Feature D'], datasets: [{ label: 'Correlation with Target', data: [0.85, -0.42, 0.65, 0.15], backgroundColor: ['#14b8a6', '#fca5a5', '#5eead4', '#99f6e4'] }] } },
+                        { label: 'Scatter Plot', type: 'scatter', data: { datasets: [{ label: 'Variable 1 vs Variable 2', data: [{x:1,y:2},{x:1.5,y:3},{x:2,y:2.5},{x:2.5,y:4},{x:3,y:3.5},{x:4,y:5}], backgroundColor: '#0d9488' }] } }
+                    ]
+                },
+                {
+                    id: 3,
+                    title: "Restaurant Website Backend (Data Focus)",
+                    short: "Designed and managed the MySQL database schema and optimized SQL queries.",
+                    description: [
+                        "Designed and managed the MySQL database schema for handling core business data, including orders, reservations, and customer details.",
+                        "Wrote and optimized SQL stored procedures and queries to ensure quick and reliable data retrieval for the website's administrative reporting features."
+                    ],
+                    charts: [
+                         { label: 'Query Performance', type: 'bar', data: { labels: ['Unoptimized Query', 'Optimized Query'], datasets: [{ label: 'Execution Time (ms)', data: [125, 18], backgroundColor: ['#fca5a5', '#5eead4'] }] } }
+                    ]
+                }
+            ];
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            let projectChartInstance = null;
+            
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y;
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                 scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            };
+
+
+            function handleNavigation(e) {
+                e.preventDefault();
+                const targetId = e.currentTarget.getAttribute('href').substring(1);
+                
+                contentSections.forEach(section => {
+                    section.classList.toggle('hidden', section.id !== targetId);
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.toggle('active', link.getAttribute('href').substring(1) === targetId);
+                });
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            navLinks.forEach(link => link.addEventListener('click', handleNavigation));
+
+            const skillsChartCtx = document.getElementById('skillsChart').getContext('2d');
+            new Chart(skillsChartCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Python Ecosystem', 'SQL & Databases', 'Data Visualization', 'Core Tools (Excel, Git)', 'Environment (Linux, Windows)'],
+                    datasets: [{
+                        label: 'Proficiency Level (Self-Rated)',
+                        data: [90, 85, 80, 75, 70],
+                        backgroundColor: [
+                            'rgba(20, 184, 166, 0.7)',
+                            'rgba(45, 212, 191, 0.7)',
+                            'rgba(94, 234, 212, 0.7)',
+                            'rgba(153, 246, 228, 0.7)',
+                            'rgba(167, 243, 208, 0.7)'
+                        ],
+                        borderColor: 'rgba(13, 148, 136, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    ...chartOptions,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                           max: 100,
+                           beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            const projectList = document.getElementById('project-list');
+            const projectDetailsView = document.getElementById('project-details');
+            
+            function showProjectDetails(projectId) {
+                const project = projectsData.find(p => p.id === projectId);
+                if (!project) return;
+                
+                document.getElementById('project-list').classList.add('hidden');
+                projectDetailsView.classList.remove('hidden');
+
+                document.getElementById('project-detail-title').textContent = project.title;
+                const descriptionContainer = document.getElementById('project-detail-description');
+                descriptionContainer.innerHTML = '';
+                project.description.forEach(p => {
+                    const li = document.createElement('li');
+                    li.textContent = p;
+                    descriptionContainer.appendChild(li);
+                });
+
+                const chartControls = document.getElementById('chart-controls');
+                chartControls.innerHTML = '';
+                project.charts.forEach((chartData, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = chartData.label;
+                    button.className = 'px-3 py-1 text-sm font-medium rounded-full transition-colors';
+                    if (index === 0) {
+                        button.classList.add('bg-teal-600', 'text-white');
+                    } else {
+                        button.classList.add('bg-slate-200', 'text-slate-700', 'hover:bg-slate-300');
+                    }
+                    button.onclick = () => {
+                        updateProjectChart(chartData);
+                        chartControls.querySelectorAll('button').forEach((btn, btnIndex) => {
+                            btn.classList.toggle('bg-teal-600', btnIndex === index);
+                            btn.classList.toggle('text-white', btnIndex === index);
+                             btn.classList.toggle('bg-slate-200', btnIndex !== index);
+                            btn.classList.toggle('text-slate-700', btnIndex !== index);
+                        });
+                    };
+                    chartControls.appendChild(button);
+                });
+
+                if (project.charts.length > 0) {
+                    updateProjectChart(project.charts[0]);
+                }
+            }
+            
+            function updateProjectChart(chartData) {
+                if(projectChartInstance) {
+                    projectChartInstance.destroy();
+                }
+                const ctx = document.getElementById('projectChart').getContext('2d');
+                projectChartInstance = new Chart(ctx, {
+                    type: chartData.type,
+                    data: chartData.data,
+                    options: chartOptions
+                });
+            }
+
+            function showProjectList() {
+                projectDetailsView.classList.add('hidden');
+                document.getElementById('project-list').classList.remove('hidden');
+                if (projectChartInstance) {
+                    projectChartInstance.destroy();
+                    projectChartInstance = null;
+                }
+            }
+
+            document.getElementById('close-project').addEventListener('click', showProjectList);
+
+            projectsData.forEach(project => {
+                const card = document.createElement('div');
+                card.className = 'project-card bg-white p-6 rounded-lg shadow-sm cursor-pointer';
+                card.innerHTML = `
+                    <h3 class="font-bold text-lg text-slate-800">${project.title}</h3>
+                    <p class="text-sm text-slate-500 mt-2">${project.short}</p>
+                `;
+                card.onclick = () => showProjectDetails(project.id);
+                projectList.appendChild(card);
+            });
+        });
+    </script>
+</body>
+</html>
